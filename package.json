@@ -1,0 +1,65 @@
+{
+  "name": "@advanced-rest-client/libs",
+  "description": "Libraries used in Advanced REST Client",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "main": "index.js",
+  "module": "index.js",
+  "author": {
+    "name": "Pawel Uchida-Psztyc",
+    "email": "pawel.psztyc@gmail.com"
+  },
+  "contributors": [
+    "Your name can be here!"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/advanced-rest-client/libs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/advanced-rest-client/libs/issues",
+    "email": "arc@mulesoft.com"
+  },
+  "dependencies": {
+    "@advanced-rest-client/events": "^0.2.22"
+  },
+  "devDependencies": {
+    "@open-wc/eslint-config": "^6.0.0",
+    "@open-wc/testing": "^3.0.1",
+    "@web/dev-server": "^0.1.25",
+    "@web/test-runner": "^0.13.20",
+    "@web/test-runner-playwright": "^0.8.8",
+    "eslint": "^8.0.1",
+    "eslint-config-prettier": "^8.3.0",
+    "husky": "^7.0.2",
+    "lint-staged": "^11.2.3",
+    "sinon": "^11.1.2",
+    "typescript": "^4.4.4",
+    "typescript-lit-html-plugin": "^0.9.0"
+  },
+  "scripts": {
+    "lint:eslint": "eslint --ext .js,.html . --ignore-path .gitignore",
+    "format:eslint": "eslint --ext .js,.html . --fix --ignore-path .gitignore",
+    "lint:types": "tsc",
+    "lint": "npm run lint:eslint",
+    "format": "npm run format:eslint",
+    "test": "web-test-runner test/**/*.test.js --coverage --node-resolve --playwright --browsers chromium firefox webkit",
+    "test:watch": "web-test-runner test/**/*.test.js --node-resolve --watch --playwright --browsers chromium"
+  },
+  "eslintConfig": {
+    "extends": [
+      "@open-wc/eslint-config",
+      "eslint-config-prettier"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix"
+    ]
+  }
+}

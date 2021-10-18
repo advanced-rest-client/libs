@@ -1,0 +1,9 @@
+coverage/
+test/
+demo/
+CONTRIBUTING.md
+polymer.json
+.*
+*.config.*
+tsconfig.json
+custom-elements.json
