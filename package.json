@@ -1,7 +1,7 @@
 {
   "name": "@advanced-rest-client/libs",
   "description": "Libraries used in Advanced REST Client",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "Apache-2.0",
   "main": "index.js",
   "module": "index.js",
