@@ -50,11 +50,11 @@ export class BodyProcessor {
    * @return {Promise<ARCHistoryRequest|ARCSavedRequest|ArcResponse|WebsocketRequest>} A copy of the request object with transformed payload
    */
   static async payloadToString(request) {
-    if (!request.payload) {
+    if (!request.payload || typeof request.payload === 'string') {
       return request;
     }
-    if (request.payload instanceof FormData) {
-      const data = /** @type ARCHistoryRequest|ARCSavedRequest|ArcResponse */ ({ ...request });
+    const data = /** @type ARCHistoryRequest|ARCSavedRequest|ArcResponse */ ({ ...request });
+    if (data.payload instanceof FormData) {
       const body = /** @type FormData */ (data.payload);
       // @ts-ignore
       if (!body.entries) {
@@ -66,21 +66,19 @@ export class BodyProcessor {
       data.multipart = entry;
       return data;
     } 
-    if (request.payload instanceof Blob) {
-      const data = { ...request };
+    if (data.payload instanceof Blob) {
       const body = /** @type Blob */ (data.payload);
       const result = await BodyProcessor.blobToString(body);
       data.payload = undefined;
       data.blob = result;
       return data;
     }
-    const transformed = BodyProcessor.bufferToTransformed(request.payload) || BodyProcessor.arrayBufferToTransformed(request.payload);
+    const transformed = BodyProcessor.bufferToTransformed(data.payload) || BodyProcessor.arrayBufferToTransformed(data.payload);
     if (transformed) {
-      const data = { ...request };
       data.payload = transformed;
       return data;
     }
-    return request;
+    return data;
   }
 
   /**
@@ -198,36 +196,36 @@ export class BodyProcessor {
    * @return {ARCHistoryRequest|ARCSavedRequest|ArcResponse|WebsocketRequest} Processed request
    */
   static restorePayload(request) {
-    const typedSaved = /** @type ARCSavedRequest */ (request);
+    const typedSaved = /** @type ARCSavedRequest */ ({ ...request });
     if (typedSaved.multipart) {
       try {
-        request.payload = BodyProcessor.restoreMultipart(typedSaved.multipart);
+        typedSaved.payload = BodyProcessor.restoreMultipart(typedSaved.multipart);
       } catch (e) {
         // eslint-disable-next-line no-console
         console.warn('Unable to restore payload.', e);
       }
       delete typedSaved.multipart;
-      return request;
+      return typedSaved;
     } 
-    if (request.blob) {
+    if (typedSaved.blob) {
       try {
-        request.payload = BodyProcessor.dataURLtoBlob(request.blob);
+        typedSaved.payload = BodyProcessor.dataURLtoBlob(typedSaved.blob);
       } catch (e) {
         // eslint-disable-next-line no-console
         console.warn('Unable to restore payload.', e);
       }
-      delete request.blob;
-      return request;
+      delete typedSaved.blob;
+      return typedSaved;
     }
-    if (!request.payload || typeof request.payload === 'string') {
-      return request;
+    if (!typedSaved.payload || typeof typedSaved.payload === 'string') {
+      return typedSaved;
     }
-    const restored = BodyProcessor.transformedToPayload(request.payload);
+    const restored = BodyProcessor.transformedToPayload(typedSaved.payload);
     if (restored) {
-      request.payload = restored;
-      return request;
+      typedSaved.payload = restored;
+      return typedSaved;
     }
-    return request;
+    return typedSaved;
   }
 
   /**

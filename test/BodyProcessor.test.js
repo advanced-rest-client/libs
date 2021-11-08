@@ -28,7 +28,7 @@ describe('BodyProcessor', () => {
       assert.deepEqual(result, obj);
     });
 
-    it('Creates "blob" property from Blob instance', async () => {
+    it('creates the "blob" property from a Blob instance', async () => {
       const b = new Blob(['***'], {type: 'text/plain'});
       const obj = {
         ...initRequest,
@@ -38,17 +38,18 @@ describe('BodyProcessor', () => {
       assert.equal(result.blob, 'data:text/plain;base64,Kioq');
     });
 
-    it('Removes "payload" with Blob instance', async () => {
+    it('removes "payload" with the Blob instance on the copy only', async () => {
       const b = new Blob(['***'], {type: 'text/plain'});
       const obj = {
         ...initRequest,
         payload: b,
       };
       const result = await BodyProcessor.payloadToString(obj);
-      assert.isUndefined(result.payload);
+      assert.isUndefined(result.payload, 'resulted payload is not defined');
+      assert.typeOf(obj.payload, 'blob', 'does not change the original object');
     });
 
-    it('creates "multipart" property from FormData instance', async () => {
+    it('creates the "multipart" property from a FormData instance', async () => {
       const b = new Blob(['***'], {type: 'text/plain'});
       const fd = new FormData();
       fd.append('file', b, 'file-name');
@@ -63,7 +64,7 @@ describe('BodyProcessor', () => {
       assert.lengthOf(result.multipart, 3);
     });
 
-    it('removes "payload" with FormData instance', async () => {
+    it('removes the "payload" with the FormData instance on the copy only', async () => {
       const b = new Blob(['***'], {type: 'text/plain'});
       const fd = new FormData();
       fd.append('file', b, 'file-name');
@@ -72,7 +73,8 @@ describe('BodyProcessor', () => {
         payload: fd,
       };
       const result = await BodyProcessor.payloadToString(obj);
-      assert.isUndefined(result.payload);
+      assert.isUndefined(result.payload, 'resulted payload is not defined');
+      assert.typeOf(obj.payload, 'FormData', 'does not change the original object');
     });
 
     it('resolves to the same object when payload is string', async () => {
@@ -82,6 +84,21 @@ describe('BodyProcessor', () => {
       };
       const result = await BodyProcessor.payloadToString(obj);
       assert.deepEqual(result, obj);
+    });
+
+    it('transforms the ArrayBuffer response payload to its own format', async () => {
+      const enc = new TextEncoder();
+      const ab = enc.encode('test').buffer;
+      const obj = {
+        ...initRequest,
+        payload: ab,
+      };
+      const result = /** @type ARCHistoryRequest */ (await BodyProcessor.payloadToString(obj));
+      const body = /** @type TransformedPayload */ (/** @type unknown */ (result.payload));
+      assert.typeOf(body, 'object', 'the payload is an object');
+      assert.equal(body.type, 'ArrayBuffer', 'has the type');
+      assert.deepEqual(body.data, [ 116, 101, 115, 116 ], 'has the data');
+      assert.deepEqual(obj.payload, ab, 'the original object is not changed');
     });
   });
 
@@ -289,8 +306,11 @@ describe('BodyProcessor', () => {
           ...initRequest,
           payload: b,
         });
+        const responseCopy = /** @type ArcResponse */ ({ ... obj.response });
         // @ts-ignore
-        obj.response.payload = b;
+        responseCopy.payload = b;
+        obj.response = responseCopy;
+
         const result = await BodyProcessor.stringifyRequest(obj);
         assert.equal(/** @type ArcResponse */ (result.response).blob, 'data:text/plain;base64,KioqKiogKioq');
       });
@@ -301,7 +321,9 @@ describe('BodyProcessor', () => {
         const obj = /** @type ARCHistoryRequest */ ({
           ...initRequest,
         });
-        obj.response.payload = view.buffer;
+        const responseCopy = /** @type ArcResponse */ ({ ... obj.response });
+        responseCopy.payload = view.buffer;
+        obj.response = responseCopy;
         const result = await BodyProcessor.stringifyRequest(obj);
         const body = /** @type TransformedPayload */ (result.response.payload);
         assert.equal(body.type, 'ArrayBuffer');
@@ -363,8 +385,9 @@ describe('BodyProcessor', () => {
         const obj = /** @type ARCHistoryRequest */ ({
           ...initRequest,
         });
-        
-        /** @type ArcResponse */ (obj.response).blob = 'data:text/plain;base64,KioqKiogKioq';
+        const responseCopy = /** @type ArcResponse */ ({ ... obj.response });
+        responseCopy.blob = 'data:text/plain;base64,KioqKiogKioq';
+        obj.response = responseCopy;
         const result = BodyProcessor.restoreRequest(obj);
         assert.typeOf(/** @type ArcResponse */ (result.response).payload, 'blob');
       });
@@ -375,7 +398,9 @@ describe('BodyProcessor', () => {
         const obj = {
           ...initRequest,
         };
-        obj.response.payload = BodyProcessor.arrayBufferToTransformed(view.buffer);
+        const responseCopy = /** @type ArcResponse */ ({ ... obj.response });
+        responseCopy.payload = BodyProcessor.arrayBufferToTransformed(view.buffer);
+        obj.response = responseCopy;
         const result = BodyProcessor.restoreRequest(obj);
         assert.typeOf(result.response.payload, 'ArrayBuffer');
       });
