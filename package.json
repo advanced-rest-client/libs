@@ -1,7 +1,7 @@
 {
   "name": "@advanced-rest-client/libs",
   "description": "Libraries used in Advanced REST Client",
-  "version": "1.0.2",
+  "version": "18.0.0",
   "license": "Apache-2.0",
   "main": "index.js",
   "module": "index.js",
@@ -21,7 +21,7 @@
     "email": "arc@mulesoft.com"
   },
   "dependencies": {
-    "@advanced-rest-client/events": "^0.2.29"
+    "@advanced-rest-client/events": "^18.0.0"
   },
   "devDependencies": {
     "@open-wc/eslint-config": "^7.0.0",
